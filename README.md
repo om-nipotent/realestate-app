@@ -1,6 +1,6 @@
-# RealState Platform — Full-Stack Real Estate Management System
+# PropEase — Full-Stack Real Estate Management System
 
-A production-ready Real Estate Buyer–Seller Management Platform with property listings, identity verification, visit scheduling, price suggestions, and admin moderation.
+A production-ready Real Estate Buyer–Seller Management Platform with property listings, identity verification, visit scheduling, AI price predictions, and admin moderation. Built to be India's Most Trusted Property Platform with zero brokerage fees.
 
 ---
 
@@ -22,7 +22,7 @@ A production-ready Real Estate Buyer–Seller Management Platform with property 
 ## Project Structure
 
 ```
-realstate-project/
+propease-project/
 ├── backend/                    # Node.js + Express API
 │   ├── config/                 # DB, Cloudinary, constants
 │   ├── controllers/            # Route handler logic
@@ -132,11 +132,11 @@ Frontend runs on: http://localhost:5173
 5. Email notification sent to user
 6. Verified users unlock full platform features
 
-### Property Price Suggestion Engine
-- Analyzes all active properties in the same city + property type
-- Calculates: average price, average price/sqft, min/max
-- Compares last 30 days vs previous 30 days for market trend
-- Returns: suggested price, confidence level, market trend (increasing/stable/decreasing)
+### AI Prediction & Future Price Forecast Engine
+- Analyzes active properties utilizing dynamic location-based regression modelling.
+- Groups and calculates datasets aggressively by area/locality for highly granular logic.
+- Predicts future property valuations for 1, 3, and 5-year intervals with transparent explainability metrics.
+- Computes intelligent investment scores, area growth potential, and expected rental yields.
 
 ### Map Integration (Leaflet.js)
 - OpenStreetMap tiles (no API key required)
@@ -285,15 +285,13 @@ user (ref), title, message, type, relatedId, isRead, timestamps
 
 ## Production Deployment Notes
 
-1. Set `NODE_ENV=production`
-2. Use MongoDB Atlas for database
-3. Use Cloudinary for image/document storage
-4. Set strong `JWT_SECRET` (32+ random characters)
-5. Configure real SMTP credentials (SendGrid, AWS SES, etc.)
-6. Set `CLIENT_URL` to your frontend domain
-7. Enable HTTPS / SSL
-8. Use PM2 or similar process manager for Node.js
-9. Set up reverse proxy (Nginx) for the API
+1. **Backend Deploy (Render)**: A `render.yaml` blueprint is already included for seamless, 1-click deployment.
+2. **Frontend Deploy (Vercel)**: A `vercel.json` configuration is included to handle fallback routing for React Router.
+3. Use MongoDB Atlas for database.
+4. Use Cloudinary for image/document storage.
+5. Set strong `JWT_SECRET` (32+ random characters).
+6. Configure real SMTP credentials (SendGrid, AWS SES, etc.).
+7. Set `CLIENT_URL` to your frontend domain (e.g., your Vercel URL).
 
 ---
 
