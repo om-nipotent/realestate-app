@@ -242,35 +242,35 @@ const togglePropertyFeatured = async (req, res, next) => {
 // @access  Private (admin)
 const getFraudAlerts = async (req, res, next) => {
   try {
-    // Find properties with suspiciously low prices (below 10% of city average)
-    const cityAverages = await Property.aggregate([
+    // Find properties with suspiciously low prices (below 10% of area average)
+    const areaAverages = await Property.aggregate([
       { $match: { status: 'active' } },
       {
         $group: {
-          _id: '$location.city',
+          _id: '$location.address',
           avgPrice: { $avg: '$price' },
         },
       },
     ]);
 
     const avgMap = {};
-    cityAverages.forEach((c) => { avgMap[c._id] = c.avgPrice; });
+    areaAverages.forEach((a) => { avgMap[a._id] = a.avgPrice; });
 
-    // Properties priced at less than 20% of city average
+    // Properties priced at less than 20% of area average
     const suspiciousProperties = await Property.find({ status: 'active' })
       .populate('seller', 'name email verificationStatus createdAt')
       .lean();
 
     const fraudAlerts = suspiciousProperties
       .filter((p) => {
-        const cityAvg = avgMap[p.location.city];
-        return cityAvg && p.price < cityAvg * 0.2;
+        const areaAvg = avgMap[p.location.address];
+        return areaAvg && p.price < areaAvg * 0.2;
       })
       .map((p) => ({
         ...p,
-        alertReason: 'Suspiciously low price compared to city average',
-        cityAvgPrice: Math.round(avgMap[p.location.city]),
-        priceRatio: Math.round((p.price / avgMap[p.location.city]) * 100),
+        alertReason: 'Suspiciously low price compared to area average',
+        areaAvgPrice: Math.round(avgMap[p.location.address]),
+        priceRatio: Math.round((p.price / avgMap[p.location.address]) * 100),
       }));
 
     // Find sellers with multiple properties in the same address

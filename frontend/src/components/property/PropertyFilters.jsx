@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, X, ChevronDown, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const PROPERTY_TYPES = ['apartment', 'house', 'villa', 'commercial', 'land', 'office'];
 const AMENITIES = ['parking', 'gym', 'swimming pool', 'garden', 'security', 'elevator', 'power backup', 'wifi'];
@@ -25,17 +26,26 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
     handleChange('amenities', updated);
   };
 
-  const FilterContent = () => (
-    <div className="space-y-5">
+  const activeFilterCount = [
+    filters.city,
+    filters.propertyType,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.bedrooms,
+    ...(filters.amenities || []),
+  ].filter(Boolean).length;
+
+  const renderFilterContent = () => (
+    <div className="space-y-6">
       {/* Search */}
       <div>
-        <label className="form-label">Search</label>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Search</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search properties..."
-            className="form-input pl-9"
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block pl-10 p-2.5 transition-colors"
             value={filters.q || ''}
             onChange={(e) => handleChange('q', e.target.value)}
           />
@@ -44,11 +54,11 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
 
       {/* City */}
       <div>
-        <label className="form-label">City / Location</label>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">City / Location</label>
         <input
           type="text"
           placeholder="Mumbai, Delhi, Bangalore..."
-          className="form-input"
+          className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-2.5 transition-colors"
           value={filters.city || ''}
           onChange={(e) => handleChange('city', e.target.value)}
         />
@@ -56,9 +66,9 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
 
       {/* Property Type */}
       <div>
-        <label className="form-label">Property Type</label>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Property Type</label>
         <select
-          className="form-input"
+          className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-2.5 transition-colors"
           value={filters.propertyType || ''}
           onChange={(e) => handleChange('propertyType', e.target.value)}
         >
@@ -73,19 +83,20 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
 
       {/* Price Range */}
       <div>
-        <label className="form-label">Price Range</label>
-        <div className="flex gap-2">
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Price Range (₹)</label>
+        <div className="flex items-center gap-2">
           <input
             type="number"
-            placeholder="Min ₹"
-            className="form-input w-1/2"
+            placeholder="Min"
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-2.5 transition-colors"
             value={filters.minPrice || ''}
             onChange={(e) => handleChange('minPrice', e.target.value)}
           />
+          <span className="text-gray-400">-</span>
           <input
             type="number"
-            placeholder="Max ₹"
-            className="form-input w-1/2"
+            placeholder="Max"
+            className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-2.5 transition-colors"
             value={filters.maxPrice || ''}
             onChange={(e) => handleChange('maxPrice', e.target.value)}
           />
@@ -94,48 +105,66 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
 
       {/* Bedrooms */}
       <div>
-        <label className="form-label">Bedrooms</label>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Bedrooms</label>
         <div className="flex gap-2 flex-wrap">
-          {['', 1, 2, 3, 4, 5].map((val) => (
-            <button
-              key={val}
-              type="button"
-              onClick={() => handleChange('bedrooms', val === '' ? '' : val.toString())}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                (filters.bedrooms || '') === (val === '' ? '' : val.toString())
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
-              }`}
-            >
-              {val === '' ? 'Any' : val === 5 ? '5+' : `${val} BHK`}
-            </button>
-          ))}
+          {['', 1, 2, 3, 4, 5].map((val) => {
+            const isSelected = (filters.bedrooms || '') === (val === '' ? '' : val.toString());
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => handleChange('bedrooms', val === '' ? '' : val.toString())}
+                className={`relative px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
+                  isSelected
+                    ? 'bg-primary-50 text-primary-700 border-primary-200 shadow-[0_0_0_1px_rgba(192,38,211,0.5)]'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {val === '' ? 'Any' : val === 5 ? '5+' : `${val} BHK`}
+                {isSelected && (
+                  <motion.div layoutId="bed-active" className="absolute inset-0 rounded-xl border-2 border-primary-500 pointer-events-none" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Amenities */}
       <div>
-        <label className="form-label">Amenities</label>
-        <div className="grid grid-cols-2 gap-2">
-          {AMENITIES.map((amenity) => (
-            <label key={amenity} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                checked={(filters.amenities || []).includes(amenity)}
-                onChange={() => handleAmenityToggle(amenity)}
-              />
-              <span className="text-sm text-gray-700 capitalize">{amenity}</span>
-            </label>
-          ))}
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Amenities</label>
+        <div className="grid grid-cols-2 gap-3">
+          {AMENITIES.map((amenity) => {
+            const isChecked = (filters.amenities || []).includes(amenity);
+            return (
+              <label key={amenity} className="flex items-center gap-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-primary-500 border-primary-500' : 'bg-white border-gray-300 group-hover:border-primary-400'}`}>
+                  <AnimatePresence>
+                    {isChecked && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={isChecked}
+                  onChange={() => handleAmenityToggle(amenity)}
+                />
+                <span className="text-sm font-medium text-gray-700 capitalize group-hover:text-gray-900 transition-colors">{amenity}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
       {/* Sort */}
       <div>
-        <label className="form-label">Sort By</label>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Sort By</label>
         <select
-          className="form-input"
+          className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-primary-500 focus:border-primary-500 block p-2.5 transition-colors cursor-pointer"
           value={filters.sort || 'newest'}
           onChange={(e) => handleChange('sort', e.target.value)}
         >
@@ -146,22 +175,32 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-2">
-        <button
+      <div className="flex gap-3 pt-4 border-t border-gray-100">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={onApply}
+          onClick={() => {
+            onApply();
+            setShowMobileFilters(false);
+          }}
           disabled={loading}
-          className="flex-1 btn-primary py-2.5 text-sm"
+          className="flex-1 btn-primary py-3 text-sm font-bold shadow-lg"
         >
           {loading ? 'Searching...' : 'Apply Filters'}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={onReset}
-          className="px-4 py-2.5 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+          onClick={() => {
+            onReset();
+            setShowMobileFilters(false);
+          }}
+          className="px-5 py-3 border border-gray-200 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-50 hover:border-gray-300 transition-all"
         >
           Reset
-        </button>
+        </motion.button>
       </div>
     </div>
   );
@@ -169,43 +208,63 @@ const PropertyFilters = ({ filters, onFilterChange, onApply, onReset, loading })
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block bg-white rounded-xl shadow-card border border-gray-100 p-5 sticky top-24">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-            <Filter className="w-4 h-4" /> Filters
+      <div className="hidden lg:block bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 sticky top-28 z-10 w-full max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h2 className="font-extrabold text-gray-900 flex items-center gap-2 text-lg tracking-tight">
+            <Filter className="w-5 h-5 text-primary-600" /> Filters
+            {activeFilterCount > 0 && (
+              <span className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-0.5 rounded-full ml-1">
+                {activeFilterCount}
+              </span>
+            )}
           </h2>
-          <button onClick={onReset} className="text-xs text-primary-600 hover:text-primary-800">
-            Clear all
-          </button>
+          {activeFilterCount > 0 && (
+            <button onClick={() => { onReset(); setShowMobileFilters(false); }} className="text-xs font-bold text-gray-400 hover:text-primary-600 transition-colors uppercase tracking-wider">
+              Clear all
+            </button>
+          )}
         </div>
-        <FilterContent />
+        {renderFilterContent()}
       </div>
 
       {/* Mobile Filter Toggle */}
-      <div className="lg:hidden">
-        <button
+      <div className="lg:hidden relative z-40">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 w-full justify-center px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
         >
-          <Filter className="w-4 h-4" />
-          Filters
-          {filters.city || filters.propertyType || filters.bedrooms ? (
-            <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full">!</span>
-          ) : null}
-          <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
-        </button>
+          <Filter className="w-4 h-4 text-primary-600" />
+          Filter & Sort Properties
+          {activeFilterCount > 0 && (
+            <span className="bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full ml-1">
+              {activeFilterCount}
+            </span>
+          )}
+          <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+        </motion.button>
 
-        {showMobileFilters && (
-          <div className="mt-3 bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-slide-down">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-800">Filters</h2>
-              <button onClick={() => setShowMobileFilters(false)}>
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-            <FilterContent />
-          </div>
-        )}
+        <AnimatePresence>
+          {showMobileFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="overflow-hidden mt-3"
+            >
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-5 mt-2">
+                <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
+                  <h2 className="font-bold text-gray-900 text-lg">Filters</h2>
+                  <button onClick={() => setShowMobileFilters(false)} className="p-1.5 bg-gray-50 text-gray-500 rounded-full hover:bg-gray-100 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {renderFilterContent()}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

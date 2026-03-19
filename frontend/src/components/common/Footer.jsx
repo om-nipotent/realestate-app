@@ -13,7 +13,7 @@ const Footer = () => {
               <div className="bg-primary-600 p-1.5 rounded-lg">
                 <Building2 className="w-5 h-5" />
               </div>
-              Housify
+              PropEase
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed mb-4">
               India's most trusted real estate platform connecting verified buyers and sellers with transparency and confidence.
@@ -38,7 +38,7 @@ const Footer = () => {
                 { label: 'Browse Properties', to: '/properties' },
                 { label: 'List a Property', to: '/seller/dashboard' },
                 { label: 'Price Estimation', to: '/seller/properties/create' },
-                { label: 'About Housify', to: '/about' },
+                { label: 'About PropEase', to: '/about' },
                 { label: 'Buyer Dashboard', to: '/buyer/dashboard' },
                 { label: 'Seller Dashboard', to: '/seller/dashboard' },
               ].map(({ label, to }) => (
@@ -77,16 +77,16 @@ const Footer = () => {
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-primary-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-gray-400">
-                  123 Business Hub, Bandra Kurla Complex, Mumbai, Maharashtra 400051
+                  Narayanpur Road, Paratwada
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                <p className="text-sm text-gray-400">+91 98765 43210</p>
+                <p className="text-sm text-gray-400">7397xxxxxx</p>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                <p className="text-sm text-gray-400">support@housify.in</p>
+                <p className="text-sm text-gray-400">support@propease.in</p>
               </div>
             </div>
 
@@ -109,7 +109,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} Housify. All rights reserved.
+            © {new Date().getFullYear()} PropEase. All rights reserved.
           </p>
           <div className="flex gap-6">
             <span className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer">Privacy Policy</span>

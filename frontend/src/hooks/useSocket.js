@@ -5,7 +5,7 @@ let socketInstance = null;
 
 const getSocket = (token) => {
   if (!socketInstance && token) {
-    socketInstance = io('/', {
+    socketInstance = io(import.meta.env.VITE_SOCKET_URL || '/', {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,

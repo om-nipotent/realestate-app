@@ -1,6 +1,0 @@
-import{c as r,M as e}from"./index-Cel_vrDr.js";/**
- * @license lucide-react v0.294.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const i=r("Calendar",[["rect",{width:"18",height:"18",x:"3",y:"4",rx:"2",ry:"2",key:"eu3xkr"}],["line",{x1:"16",x2:"16",y1:"2",y2:"6",key:"m3sa8f"}],["line",{x1:"8",x2:"8",y1:"2",y2:"6",key:"18kwsl"}],["line",{x1:"3",x2:"21",y1:"10",y2:"10",key:"xt86sb"}]]),c=async s=>(await e.post("/inquiries",s)).data,o=async(s={})=>(await e.get("/inquiries/buyer",{params:s})).data,u=async(s={})=>(await e.get("/inquiries/seller",{params:s})).data,y=async(s,t)=>(await e.put(`/inquiries/${s}/reply`,{reply:t})).data,d=async s=>(await e.put(`/inquiries/${s}/read`)).data,l=async s=>(await e.post("/visits",s)).data,p=async(s={})=>(await e.get("/visits/buyer",{params:s})).data,w=async(s={})=>(await e.get("/visits/seller",{params:s})).data,q=async(s,t)=>(await e.put(`/visits/${s}/respond`,t)).data,x=async s=>(await e.put(`/visits/${s}/cancel`)).data,g=async s=>(await e.put(`/visits/${s}/complete`)).data;export{i as C,p as a,u as b,w as c,y as d,g as e,x as f,o as g,q as h,d as m,l as r,c as s};

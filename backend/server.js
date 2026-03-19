@@ -26,6 +26,7 @@ const inquiryRoutes = require('./routes/inquiry.routes');
 const visitRoutes = require('./routes/visit.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const adminRoutes = require('./routes/admin.routes');
+const predictionRoutes = require('./routes/prediction.routes');
 
 // Initialize Express app
 const app = express();
@@ -84,13 +85,20 @@ app.use('/api/v1/inquiries', inquiryRoutes);
 app.use('/api/v1/visits', visitRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1', predictionRoutes);
 
-// ─── 404 Handler ──────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
+// ─── Serve Frontend & 404 Handler ───────────────────────────────────────────
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res) => {
+  if (req.originalUrl.startsWith('/api/')) {
+    return res.status(404).json({
+      success: false,
+      error: `Route not found: ${req.method} ${req.originalUrl}`,
+    });
+  }
+  res.sendFile(path.resolve(frontendPath, 'index.html'));
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
@@ -101,27 +109,26 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    // Connect to database
+    // Connect to database (non-fatal — prediction route works without DB)
     await connectDB();
+  } catch (error) {
+    console.warn('⚠️  MongoDB unavailable — DB-dependent routes disabled. Prediction engine still active.');
+  }
 
-    // Initialize Socket.io
-    initSocket(server);
+  // Initialize Socket.io
+  try { initSocket(server); } catch (_) {}
 
-    // Start HTTP server
-    server.listen(PORT, () => {
-      console.log(`
+  // Start HTTP server
+  server.listen(PORT, () => {
+    console.log(`
 ╔════════════════════════════════════════╗
 ║   🏠 RealState Platform API Server    ║
 ║   Mode: ${process.env.NODE_ENV?.padEnd(31)}║
 ║   Port: ${String(PORT).padEnd(31)}║
 ║   URL:  http://localhost:${PORT}         ║
 ╚════════════════════════════════════════╝
-      `);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
-    process.exit(1);
-  }
+    `);
+  });
 };
 
 // Handle unhandled promise rejections
@@ -145,4 +152,11 @@ process.on('SIGTERM', () => {
   });
 });
 
-startServer();
+if (process.env.VERCEL) {
+  // On Vercel, don't listen on a port. Just connect DB.
+  connectDB().catch(err => console.error('MongoDB connection error on Vercel:', err));
+} else {
+  startServer();
+}
+
+module.exports = app;

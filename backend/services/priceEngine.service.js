@@ -183,7 +183,7 @@ const suggestPrice = async (city, propertyType, areaSqft, bedrooms) => {
 };
 
 /**
- * Get trending areas (cities with high demand)
+ * Get trending areas (localities with high demand)
  */
 const getTrendingAreas = async (limit = 10) => {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -192,7 +192,8 @@ const getTrendingAreas = async (limit = 10) => {
     { $match: { status: 'active' } },
     {
       $group: {
-        _id: '$location.city',
+        _id: '$location.address',
+        city: { $first: '$location.city' },
         totalListings: { $sum: 1 },
         totalViews: { $sum: '$views' },
         avgPrice: { $avg: '$price' },
@@ -218,7 +219,8 @@ const getTrendingAreas = async (limit = 10) => {
     { $limit: limit },
     {
       $project: {
-        city: '$_id',
+        area: '$_id',
+        city: 1,
         totalListings: 1,
         totalViews: 1,
         avgPrice: { $round: ['$avgPrice', 0] },
@@ -263,7 +265,8 @@ const getMarketStats = async () => {
       { $match: { status: 'active' } },
       {
         $group: {
-          _id: '$location.city',
+          _id: '$location.address',
+          city: { $first: '$location.city' },
           count: { $sum: 1 },
           avgPrice: { $avg: '$price' },
         },
@@ -277,8 +280,9 @@ const getMarketStats = async () => {
     totalProperties: stats[0]?.totalProperties || 0,
     avgPrice: Math.round(stats[0]?.avgPrice || 0),
     totalViews: stats[0]?.totalViews || 0,
-    topCities: cityStats.map((c) => ({
-      city: c._id,
+    topAreas: cityStats.map((c) => ({
+      area: c._id,
+      city: c.city,
       count: c.count,
       avgPrice: Math.round(c.avgPrice),
     })),

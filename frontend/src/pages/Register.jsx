@@ -75,7 +75,7 @@ const Register = () => {
             <div className="bg-primary-700 text-white p-2 rounded-xl shadow-lg">
               <Building2 className="w-6 h-6" />
             </div>
-            Housify
+            PropEase
           </Link>
           <p className="text-gray-500 mt-2 text-sm">Create your account in 2 easy steps.</p>
         </div>

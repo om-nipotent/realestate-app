@@ -2,36 +2,37 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Linkedin, Twitter, Mail, Target, Eye, Heart, Users, TrendingUp, Shield } from 'lucide-react';
 import Footer from '../components/common/Footer';
+import omPhoto from './om.jpg';
 
 const FOUNDERS = [
   {
-    name: 'Arjun Mehta',
+    name: 'Om Tayade',
     role: 'CEO & Co-Founder',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-    bio: 'Former Goldman Sachs VP with 12 years in PropTech and real estate finance. Arjun saw firsthand how opaque and fragmented the Indian property market was — and built Housify to fix it. He leads product strategy and investor relations from Mumbai.',
+    image: omPhoto,
+    bio: 'Former Goldman Sachs VP with 12 years in PropTech and real estate finance. Arjun saw firsthand how opaque and fragmented the Indian property market was — and built PropEase to fix it. He leads product strategy and investor relations from Mumbai.',
     linkedin: '#',
     twitter: '#',
-    email: 'arjun@housify.in',
+    email: 'arjun@propease.in',
     tag: '12 yrs · PropTech & Finance',
   },
   {
-    name: 'Priya Iyer',
+    name: 'Om Tayade',
     role: 'CTO & Co-Founder',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
-    bio: 'Ex-Google engineer and IIT Bombay alumna passionate about making technology work for real-world problems. Priya architected Housify\'s verification system, AI-powered price engine, and real-time notification platform that processes millions of events daily.',
+    image: omPhoto,
+    bio: 'Ex-Google engineer and IIT Bombay alumna passionate about making technology work for real-world problems. Priya architected PropEase\'s verification system, AI-powered price engine, and real-time notification platform that processes millions of events daily.',
     linkedin: '#',
     twitter: '#',
-    email: 'priya@housify.in',
+    email: 'priya@propease.in',
     tag: 'Ex-Google · IIT Bombay',
   },
   {
-    name: 'Rohan Kapoor',
+    name: 'Om Tayade',
     role: 'COO & Co-Founder',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80',
-    bio: 'Serial entrepreneur with two successful PropTech exits. Rohan manages operations, seller partnerships, and city expansion across India. He has onboarded 2,000+ verified sellers and built the trust framework that keeps Housify\'s marketplace safe and reliable.',
+    image: omPhoto,
+    bio: 'Serial entrepreneur with two successful PropTech exits. Rohan manages operations, seller partnerships, and city expansion across India. He has onboarded 2,000+ verified sellers and built the trust framework that keeps PropEase\'s marketplace safe and reliable.',
     linkedin: '#',
     twitter: '#',
-    email: 'rohan@housify.in',
+    email: 'rohan@propease.in',
     tag: '2 Exits · Operations & Growth',
   },
 ];
@@ -40,11 +41,11 @@ const VALUES = [
   { icon: Shield, title: 'Trust First', desc: 'Every seller and buyer goes through our Aadhaar-based verification. We don\'t compromise on authenticity.', color: 'from-blue-500 to-blue-700' },
   { icon: Eye, title: 'Full Transparency', desc: 'No hidden fees, no bait-and-switch listings. What you see is exactly what you get — prices, photos, and facts.', color: 'from-purple-500 to-purple-700' },
   { icon: TrendingUp, title: 'Data-Driven', desc: 'Our AI price engine and market analytics give buyers and sellers the intelligence to make confident decisions.', color: 'from-primary-500 to-primary-700' },
-  { icon: Heart, title: 'People First', desc: 'Technology is just the means. Our real mission is to help Indian families find their perfect home without stress.', color: 'from-rose-500 to-rose-700' },
+  { icon: Heart, title: 'People First', desc: 'Technology is just the means. Our real mission is to help Indian families find their perfect home without stress.', color: 'from-premium-500 to-premium-700' },
 ];
 
 const MILESTONES = [
-  { year: '2021', event: 'Housify founded in Mumbai with a 3-person team and a bold vision.' },
+  { year: '2021', event: 'PropEase founded in Mumbai with a 3-person team and a bold vision.' },
   { year: '2022', event: 'Launched in 5 cities. First 1,000 verified sellers onboarded.' },
   { year: '2023', event: 'Crossed 10,000 active listings. Introduced AI-powered price estimation.' },
   { year: '2024', event: 'Expanded to 50+ cities. 15,000+ happy buyers. Series A funding raised.' },
@@ -53,7 +54,7 @@ const MILESTONES = [
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-surface-900">
 
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-primary-800 via-primary-700 to-primary-950 py-24 overflow-hidden">
@@ -70,16 +71,16 @@ const About = () => {
             <span className="text-accent-300">Trustworthy</span> Property Platform
           </h1>
           <p className="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed">
-            Housify was born out of frustration. We experienced firsthand how broken, opaque, and stressful the Indian real estate market was for regular people. So we built the platform we always wished existed.
+            PropEase was born out of frustration. We experienced firsthand how broken, opaque, and stressful the Indian real estate market was for regular people. So we built the platform we always wished existed.
           </p>
         </div>
       </section>
 
       {/* Mission + Vision */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 dark:bg-surface-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+            <div className="bg-white dark:bg-surface-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-surface-700">
               <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center mb-5">
                 <Target className="w-6 h-6 text-primary-600" />
               </div>
@@ -88,7 +89,7 @@ const About = () => {
                 To make buying and selling property in India as simple, safe, and transparent as possible — eliminating fraud, confusion, and unnecessary middlemen from the process.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+            <div className="bg-white dark:bg-surface-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-surface-700">
               <div className="w-12 h-12 bg-accent-100 rounded-2xl flex items-center justify-center mb-5">
                 <Eye className="w-6 h-6 text-accent-600" />
               </div>
@@ -121,10 +122,10 @@ const About = () => {
       </section>
 
       {/* Founders */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-surface-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-primary-600 text-sm font-semibold uppercase tracking-wide mb-2">The People Behind Housify</p>
+            <p className="text-primary-600 text-sm font-semibold uppercase tracking-wide mb-2">The People Behind PropEase</p>
             <h2 className="text-3xl font-extrabold text-gray-900">Meet Our Founders</h2>
             <p className="text-gray-500 mt-2 max-w-xl mx-auto">Three people with one shared obsession: making real estate work for everyone in India, not just the privileged few.</p>
           </div>
@@ -174,7 +175,7 @@ const About = () => {
       </section>
 
       {/* Values */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 dark:bg-surface-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <p className="text-primary-600 text-sm font-semibold uppercase tracking-wide mb-2">What Drives Us</p>
@@ -195,7 +196,7 @@ const About = () => {
       </section>
 
       {/* Timeline */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-surface-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <p className="text-primary-600 text-sm font-semibold uppercase tracking-wide mb-2">Since 2021</p>
@@ -222,8 +223,8 @@ const About = () => {
       {/* CTA */}
       <section className="py-20 bg-gradient-to-br from-primary-800 to-primary-950">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-extrabold text-white mb-4">Be Part of the Housify Story</h2>
-          <p className="text-primary-200 mb-8">Join thousands of buyers and sellers who trust Housify to make their property dreams a reality.</p>
+          <h2 className="text-3xl font-extrabold text-white mb-4">Be Part of the PropEase Story</h2>
+          <p className="text-primary-200 mb-8">Join thousands of buyers and sellers who trust PropEase to make their property dreams a reality.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-700 font-bold rounded-2xl hover:bg-primary-50 transition-all shadow-xl active:scale-95">
               Get Started Free

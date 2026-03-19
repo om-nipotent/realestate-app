@@ -129,7 +129,7 @@ const AdminSettings = () => {
         <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
           <Star className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-primary-800">Featured Properties appear on the Housify homepage</p>
+            <p className="text-sm font-semibold text-primary-800">Featured Properties appear on the PropEase homepage</p>
             <p className="text-xs text-primary-600 mt-0.5">Properties marked as featured are shown in the homepage hero banner and the "Featured Properties" section. Aim to keep 6–12 featured at a time for best results.</p>
           </div>
         </div>

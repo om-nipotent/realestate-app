@@ -1,44 +1,85 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, CheckCircle2, Clock, AlertCircle, Upload,
-  FileImage, Camera, ArrowLeft
+  FileImage, Camera, ArrowLeft, ArrowRight, X, User
 } from 'lucide-react';
 import { submitVerification, getMyVerificationStatus } from '../../api/verification.api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-// ── File picker button ────────────────────────────────────────────────────────
-const FilePicker = ({ label, icon: Icon, accept, file, onChange, required }) => {
+// ── Enhanced File Picker ───────────────────────────────────────────────────
+const FilePicker = ({ label, icon: Icon, accept, file, onChange, required, desc }) => {
   const ref = useRef(null);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setIsDragActive(true);
+    else if (e.type === 'dragleave') setIsDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onChange(e.dataTransfer.files[0]);
+    }
+  };
+
   return (
-    <div>
-      <p className="form-label">{label}{required && <span className="text-red-500 ml-1">*</span>}</p>
-      <div
-        className={`flex items-center gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all
-          ${file ? 'border-primary-400 bg-primary-50' : 'border-dashed border-gray-300 hover:border-primary-400 hover:bg-gray-50'}`}
-        onClick={() => ref.current?.click()}
-      >
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${file ? 'bg-primary-100' : 'bg-gray-100'}`}>
-          <Icon className={`w-5 h-5 ${file ? 'text-primary-600' : 'text-gray-400'}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          {file ? (
-            <>
-              <p className="text-sm font-semibold text-gray-800 truncate">{file.name}</p>
-              <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB · Click to change</p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-gray-600">Click to browse</p>
-              <p className="text-xs text-gray-400">JPG, PNG, PDF · Max 5MB</p>
-            </>
+    <div className="mb-6">
+      <p className="text-sm font-bold text-gray-700 mb-2">{label}{required && <span className="text-rose-500 ml-1">*</span>}</p>
+      
+      {!file ? (
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={() => ref.current?.click()}
+          className={`relative overflow-hidden border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center group
+            ${isDragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-200 bg-gray-50 hover:bg-white hover:border-primary-300 hover:shadow-md'}`}
+        >
+          {isDragActive && (
+            <motion.div layoutId="drag-active" className="absolute inset-0 bg-primary-100/50 backdrop-blur-sm -z-10" />
           )}
-        </div>
-        <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 ${file ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
-          {file ? 'Change' : 'Browse'}
-        </span>
-      </div>
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-colors ${isDragActive ? 'bg-primary-200 text-primary-700' : 'bg-white text-gray-400 group-hover:bg-primary-50 group-hover:text-primary-500 shadow-sm'}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          <p className="text-base font-bold text-gray-800 mb-1 tracking-tight">
+            {isDragActive ? 'Drop file here' : 'Click or drag file to upload'}
+          </p>
+          <p className="text-xs text-gray-500 font-medium">{desc || 'JPG, PNG, PDF formats up to 5MB'}</p>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border border-gray-200 bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm"
+        >
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">{file.name}</p>
+            <p className="text-xs font-semibold text-gray-400">{(file.size / 1024).toFixed(1)} KB • Ready</p>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onChange(null); }}
+            className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </motion.div>
+      )}
+
       <input
         ref={ref}
         type="file"
@@ -50,12 +91,56 @@ const FilePicker = ({ label, icon: Icon, accept, file, onChange, required }) => 
   );
 };
 
+// ── Step Indicator ─────────────────────────────────────────────────────────
+const StepIndicator = ({ currentStep, steps }) => {
+  return (
+    <div className="flex items-center justify-center mb-10 w-full max-w-sm mx-auto">
+      {steps.map((step, index) => {
+        const isCompleted = currentStep > index + 1;
+        const isActive = currentStep === index + 1;
+        return (
+          <React.Fragment key={step.id}>
+            <div className="flex flex-col items-center relative z-10">
+              <motion.div
+                initial={false}
+                animate={{
+                  backgroundColor: isCompleted || isActive ? '#C026D3' : '#F3F4F6', // primary-500
+                  borderColor: isCompleted || isActive ? '#C026D3' : '#E5E7EB',
+                  scale: isActive ? 1.1 : 1,
+                }}
+                className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-bold shadow-sm transition-colors duration-300
+                  ${isActive || isCompleted ? 'text-white' : 'text-gray-400'}`}
+              >
+                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
+              </motion.div>
+              <span className={`absolute -bottom-6 text-xs font-bold whitespace-nowrap transition-colors duration-300 ${isActive ? 'text-primary-600' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                {step.title}
+              </span>
+            </div>
+            {index < steps.length - 1 && (
+              <div className="flex-1 h-1 mx-2 bg-gray-100 rounded-full relative overflow-hidden -mt-6">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: isCompleted ? '100%' : '0%' }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  className="absolute inset-0 bg-primary-500"
+                />
+              </div>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function BuyerVerification() {
-  const { user, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [step, setStep] = useState(1); // 1: Info, 2: Uploads, 3: Review
 
   const [aadharNumber, setAadharNumber] = useState('');
   const [aadharCard, setAadharCard] = useState(null);
@@ -66,19 +151,37 @@ export default function BuyerVerification() {
     try {
       const res = await getMyVerificationStatus();
       setVerification(res.data);
+      if (res.data?.status === 'pending' || res.data?.status === 'approved') {
+        setStep(4); // Status Result view
+      } else if (res.data?.status === 'rejected') {
+        setStep(1); // Allow resubmit
+      }
     } catch {}
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const clean = aadharNumber.replace(/\s/g, '');
-    if (!/^\d{12}$/.test(clean)) return toast.error('Enter a valid 12-digit Aadhar number');
-    if (!aadharCard) return toast.error('Please upload your Aadhar Card');
-    if (!selfie) return toast.error('Please upload a selfie with your Aadhar Card');
+  const handleNextStep = () => {
+    if (step === 1) {
+      const clean = aadharNumber.replace(/\s/g, '');
+      if (!/^\d{12}$/.test(clean)) return toast.error('Enter a valid 12-digit Aadhar number');
+      setStep(2);
+    } else if (step === 2) {
+      if (!aadharCard) return toast.error('Please upload your Aadhar Card');
+      if (!selfie) return toast.error('Please upload a selfie with your Aadhar Card');
+      setStep(3);
+    }
+  };
 
+  const handlePrevStep = () => {
+    setStep((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    const clean = aadharNumber.replace(/\s/g, '');
+    
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -86,7 +189,8 @@ export default function BuyerVerification() {
       fd.append('aadharCard', aadharCard);
       fd.append('selfieWithAadhar', selfie);
       await submitVerification(fd);
-      toast.success('Verification submitted! Admin will review within 24 hours.');
+      
+      toast.success('Verification submitted successfully!');
       setAadharNumber('');
       setAadharCard(null);
       setSelfie(null);
@@ -94,17 +198,18 @@ export default function BuyerVerification() {
       await load();
     } catch (err) {
       toast.error(err.message || 'Submission failed. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Loading verification status...</p>
-        </div>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm font-bold tracking-widest uppercase">Checking Status</p>
+        </motion.div>
       </div>
     );
   }
@@ -112,174 +217,252 @@ export default function BuyerVerification() {
   const status = verification?.status;
   const canSubmit = !status || status === 'rejected';
 
-  return (
-    <div className="min-h-screen bg-surface-50 py-8">
-      <div className="max-w-xl mx-auto px-4">
+  const steps = [
+    { id: 1, title: 'Details' },
+    { id: 2, title: 'Documents' },
+    { id: 3, title: 'Review' }
+  ];
 
-        {/* Back */}
-        <Link to="/buyer/dashboard" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 mb-6 transition-colors">
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <div className="max-w-2xl mx-auto">
+        <Link to="/buyer/dashboard" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-primary-600 mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-3">
-            <Shield className="w-8 h-8 text-primary-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Identity Verification</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Verify your identity to <strong className="text-primary-300">send inquiries</strong> and <strong className="text-primary-300">schedule property visits</strong>
-          </p>
-        </div>
-
         {/* ── STATUS BANNERS ── */}
-        {status === 'approved' && (
-          <div className="rounded-2xl p-6 text-white shadow-lg mb-6" style={{ background: 'linear-gradient(135deg,#F57799,#F24E80)', border: '1px solid rgba(245,119,153,0.40)' }}>
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Identity Verified ✅</h2>
-                <p className="text-primary-100 text-sm mt-0.5">You can now send inquiries and schedule property visits.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {status === 'pending' && (
-          <div className="rounded-2xl p-6 text-white shadow-lg mb-6" style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)' }}>
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <Clock className="w-8 h-8 animate-pulse" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Under Review</h2>
-                <p className="text-amber-100 text-sm mt-0.5">Admin is reviewing your documents. Usually within 24 hours.</p>
-              </div>
-            </div>
-            {verification && (
-              <div className="mt-4 bg-white/15 rounded-xl p-4 space-y-1.5 text-sm">
-                <p><span className="text-white/70">Aadhar:</span> {verification.aadharNumber?.replace(/(\d{4})(?=\d)/g, '$1 ')}</p>
-                <p><span className="text-white/70">Submitted:</span> {new Date(verification.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              </div>
+        {(status === 'approved' || status === 'pending' || status === 'rejected') && step === 4 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 text-center">
+            {status === 'approved' && (
+              <>
+                <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
+                  <CheckCircle2 className="w-12 h-12 text-white" />
+                </div>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Identity Verified</h1>
+                <p className="text-gray-500 text-base max-w-md mx-auto mb-8">You now have full access to send property inquiries and schedule viewing visits with sellers.</p>
+                <Link to="/properties" className="btn-primary py-3.5 px-8 shadow-lg inline-flex items-center gap-2">
+                  Browse Properties <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
             )}
-          </div>
-        )}
 
-        {status === 'rejected' && (
-          <div className="rounded-2xl p-6 text-white shadow-lg mb-6" style={{ background: 'linear-gradient(135deg,#ef4444,#dc2626)' }}>
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <AlertCircle className="w-8 h-8" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Verification Rejected</h2>
-                <p className="text-red-100 text-sm mt-1">
-                  <strong>Reason:</strong> {verification?.rejectionReason || 'Please re-upload clearer documents.'}
-                </p>
-              </div>
-            </div>
-            <p className="text-red-100 text-sm mt-3 font-medium">→ Please re-submit with correct documents below.</p>
-          </div>
-        )}
-
-        {/* ── VERIFICATION FORM ── */}
-        {canSubmit && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">
-                {status === 'rejected' ? 'Re-submit Verification' : 'Submit Verification Documents'}
-              </h2>
-              <p className="text-sm text-gray-400 mt-0.5">Fill in your details and upload the required documents</p>
-            </div>
-
-            {/* Aadhar Number */}
-            <div>
-              <label className="form-label">Aadhar Number <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={14}
-                value={aadharNumber}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-                  const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-                  setAadharNumber(formatted);
-                }}
-                placeholder="XXXX XXXX XXXX"
-                className="form-input tracking-widest text-lg font-mono"
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1">Enter your 12-digit Aadhar number</p>
-            </div>
-
-            {/* Aadhar Card Upload */}
-            <FilePicker
-              label="Aadhar Card (Front side or scanned copy)"
-              icon={FileImage}
-              accept=".jpg,.jpeg,.png,.pdf"
-              file={aadharCard}
-              onChange={setAadharCard}
-              required
-            />
-
-            {/* Selfie Upload */}
-            <FilePicker
-              label="Selfie with Aadhar Card"
-              icon={Camera}
-              accept=".jpg,.jpeg,.png"
-              file={selfie}
-              onChange={setSelfie}
-              required
-            />
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Submitting...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Upload className="w-4 h-4" /> Submit Verification
-                </span>
-              )}
-            </button>
-
-            <p className="text-xs text-gray-400 text-center">
-              Your documents are stored securely and only viewed by admins for verification purposes.
-            </p>
-          </form>
-        )}
-
-        {/* How it works */}
-        {status !== 'approved' && (
-          <div className="mt-4 bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">How Verification Works</p>
-            <div className="space-y-4">
-              {[
-                { n: 1, icon: FileImage, t: 'Submit Your Documents', c: 'Enter your 12-digit Aadhar number and upload your Aadhar card + selfie' },
-                { n: 2, icon: Clock, t: 'Admin Review', c: 'Our admin team reviews your submission usually within 24 hours' },
-                { n: 3, icon: Shield, t: 'Get Full Access', c: 'Once approved, you can send inquiries and schedule property visits freely' },
-              ].map(({ n, icon: Icon, t, c }) => (
-                <div key={n} className="flex gap-3">
-                  <div className="w-8 h-8 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{n}</div>
+            {status === 'pending' && (
+              <>
+                <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30">
+                  <Clock className="w-12 h-12 text-white" />
+                </div>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Application Under Review</h1>
+                <p className="text-gray-500 text-base max-w-md mx-auto mb-6">Our administration team is currently verifying your documents. This process is usually completed within 12-24 hours.</p>
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-left max-w-md mx-auto flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">{t}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{c}</p>
+                    <p className="text-sm font-bold text-amber-900">Application Received</p>
+                    <p className="text-xs text-amber-700 mt-1">Submitted on {new Date(verification.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   </div>
                 </div>
-              ))}
+              </>
+            )}
+
+            {status === 'rejected' && (
+              <>
+                <div className="w-24 h-24 bg-gradient-to-br from-rose-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-rose-500/30">
+                  <X className="w-12 h-12 text-white" />
+                </div>
+                <h1 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Verification Rejected</h1>
+                <p className="text-gray-500 text-base max-w-md mx-auto mb-6">Unfortunately, we could not verify your identity with the provided documents.</p>
+                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 text-left max-w-md mx-auto flex items-start gap-3 mb-8">
+                  <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-rose-900">Reason for Rejection</p>
+                    <p className="text-sm font-medium text-rose-700 mt-1">{verification?.rejectionReason || 'Documents were unclear or did not match the provided details.'}</p>
+                  </div>
+                </div>
+                <button onClick={() => setStep(1)} className="btn-primary py-3 px-8 shadow-lg">Submit Again</button>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── VERIFICATION FORM MULTI-STEP ── */}
+        {canSubmit && step < 4 && (
+          <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-10 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-100">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary-400 to-primary-600"
+                initial={{ width: '0%' }}
+                animate={{ width: `${(step / 3) * 100}%` }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+              />
+            </div>
+
+            <div className="text-center mb-10 pt-2">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary-50 rounded-2xl mb-4 shadow-inner border border-primary-100">
+                <Shield className="w-7 h-7 text-primary-600" />
+              </div>
+              <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Buyer Verification</h1>
+              <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">Verify your identity securely to unlock viewing options and direct messaging with sellers.</p>
+            </div>
+
+            <StepIndicator currentStep={step} steps={steps} />
+
+            <div className="mt-12 min-h-[300px]">
+              <AnimatePresence mode="wait">
+                {/* ── STEP 1: Basic Info ── */}
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 drop-shadow-sm">Identity Details</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block">12-Digit Aadhar Number <span className="text-rose-500">*</span></label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={14}
+                          value={aadharNumber}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                            const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+                            setAadharNumber(formatted);
+                          }}
+                          placeholder="XXXX XXXX XXXX"
+                          className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-lg rounded-xl focus:ring-primary-500 focus:border-primary-500 p-4 transition-colors tracking-[0.2em] font-mono shadow-inner"
+                          required
+                        />
+                        <p className="text-xs text-gray-400 font-medium mt-2 flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5" /> Your data is encrypted and secure.
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── STEP 2: Documents ── */}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 drop-shadow-sm">Upload Documents</h3>
+                    <div className="space-y-2">
+                      <FilePicker
+                        label="Aadhar Card Document"
+                        desc="Clear picture of front side or PDF copy"
+                        icon={FileImage}
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        file={aadharCard}
+                        onChange={setAadharCard}
+                        required
+                      />
+                      <FilePicker
+                        label="Selfie Verification"
+                        desc="Clear selfie holding your Aadhar card"
+                        icon={Camera}
+                        accept=".jpg,.jpeg,.png"
+                        file={selfie}
+                        onChange={setSelfie}
+                        required
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── STEP 3: Review ── */}
+                {step === 3 && (
+                  <motion.div
+                    key="step3"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 drop-shadow-sm">Review & Submit</h3>
+                    
+                    <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-6">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Aadhar Number</p>
+                        <p className="text-lg font-mono font-medium text-gray-900">{aadharNumber}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-6">
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">ID Document</p>
+                          <div className="flex items-center gap-2">
+                            <FileImage className="w-4 h-4 text-emerald-500" />
+                            <span className="text-sm font-semibold text-gray-800 truncate">{aadharCard?.name}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Selfie</p>
+                          <div className="flex items-center gap-2">
+                            <Camera className="w-4 h-4 text-emerald-500" />
+                            <span className="text-sm font-semibold text-gray-800 truncate">{selfie?.name}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-start gap-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-blue-800">
+                      <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs font-medium leading-relaxed">
+                        By submitting, you confirm that all provided details are accurate. False information may lead to permanent account suspension.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between mt-10 pt-6 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={handlePrevStep}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-colors ${
+                  step === 1 ? 'opacity-0 pointer-events-none' : 'text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-900'
+                }`}
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="btn-primary py-3 px-8 text-sm flex items-center gap-2 shadow-lg"
+                >
+                  Continue <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="btn-primary py-3 px-8 text-sm flex items-center gap-2 shadow-lg shadow-primary-500/30"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" /> Submit Application
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

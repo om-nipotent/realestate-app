@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: realestate-platform
+    env: node
+    region: singapore # or any preferred Render region
+    buildCommand: "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend"
+    startCommand: "npm start --prefix backend"
+    envVars:
+      - key: NODE_VERSION
+        value: "18.18.0"
+      - key: PORT
+        value: "10000"
+
+      # Core Backend Env Vars (Needs to be provided in dashboard)
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: "7d"
+
+      # Cloudinary details for image uploads
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # Email Setup
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+      # (Optional) The frontend will live on the same domain as backend,
+      # so it naturally works without needing VITE_API_URL or CORS overrides!

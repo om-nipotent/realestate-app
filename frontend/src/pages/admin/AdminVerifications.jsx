@@ -172,7 +172,7 @@ const DetailModal = ({ v, onClose, onApprove, onReject, loading }) => {
                   <button
                     onClick={() => onApprove(v._id)}
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40" style={{ background: '#F57799', color: '#ffffff' }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40" style={{ background: '#C026D3', color: '#ffffff' }}
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     {loading ? 'Processing...' : 'Approve Verification'}
@@ -217,9 +217,9 @@ const DetailModal = ({ v, onClose, onApprove, onReject, loading }) => {
           )}
 
           {v.status === 'approved' && (
-            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(245,119,153,0.08)', border: '1px solid rgba(245,119,153,0.25)' }}>
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: '#F57799' }} />
-              <p className="text-sm font-medium" style={{ color: '#F57799' }}>This verification has been approved.</p>
+            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(192,38,211,0.08)', border: '1px solid rgba(192,38,211,0.25)' }}>
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: '#C026D3' }} />
+              <p className="text-sm font-medium" style={{ color: '#C026D3' }}>This verification has been approved.</p>
             </div>
           )}
         </div>

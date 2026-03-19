@@ -39,7 +39,7 @@ const Login = () => {
             <div className="bg-primary-700 text-white p-2 rounded-xl shadow-lg">
               <Building2 className="w-6 h-6" />
             </div>
-            Housify
+            PropEase
           </Link>
           <p className="text-gray-500 mt-2 text-sm">Welcome back! Sign in to continue.</p>
         </div>
@@ -120,7 +120,7 @@ const Login = () => {
 
         {/* Demo credentials */}
         <div className="mt-4 p-4 bg-primary-50 rounded-xl border border-primary-100 text-center">
-          <p className="text-xs text-primary-700 font-medium mb-1">Welcome to Housify</p>
+          <p className="text-xs text-primary-700 font-medium mb-1">Welcome to PropEase</p>
           <p className="text-xs text-primary-500">Create your own account to get started</p>
         </div>
       </div>
