@@ -41,11 +41,13 @@ api.interceptors.response.use(
       }
 
       // Extract meaningful error message
-      const message =
+      const raw =
         data?.error ||
         data?.message ||
         (Array.isArray(data?.errors) && data.errors[0]?.message) ||
         'Something went wrong';
+
+      const message = typeof raw === 'string' ? raw : JSON.stringify(raw);
 
       return Promise.reject(new Error(message));
     }

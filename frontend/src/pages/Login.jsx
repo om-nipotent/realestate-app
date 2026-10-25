@@ -24,7 +24,10 @@ const Login = () => {
       const dashboards = { buyer: '/buyer/dashboard', seller: '/seller/dashboard', admin: '/admin/dashboard' };
       navigate(from || dashboards[user.role] || '/', { replace: true });
     } catch (err) {
-      toast.error(err.message || 'Login failed. Please check your credentials.');
+      const msg = typeof err === 'string' ? err
+        : typeof err?.message === 'string' ? err.message
+        : 'Login failed. Please check your credentials.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
