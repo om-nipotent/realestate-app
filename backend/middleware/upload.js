@@ -2,14 +2,19 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure uploads directory exists
+// ─── Storage Strategy ─────────────────────────────────────────────────────────
+// On Vercel the filesystem is read-only, so we use memory storage.
+// Locally we keep disk storage for the dev workflow.
+const isVercel = !!process.env.VERCEL;
+
+// Ensure uploads directory exists (local only)
 const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
+if (!isVercel && !fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Storage configuration
-const storage = multer.diskStorage({
+// Disk storage for local dev
+const diskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     let folder = uploadsDir;
 
@@ -33,6 +38,11 @@ const storage = multer.diskStorage({
     cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   },
 });
+
+// Memory storage for Vercel (files go to Cloudinary from buffer)
+const memStorage = multer.memoryStorage();
+
+const storage = isVercel ? memStorage : diskStorage;
 
 // Allowed image MIME types
 const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -134,19 +144,23 @@ const handleUpload = (uploadFn) => (req, res, next) => {
   });
 };
 
+// Verification docs storage — also uses memory on Vercel
+const vercelVerificationStorage = memStorage;
+const localVerificationStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const folder = path.join(uploadsDir, 'documents');
+    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+    cb(null, folder);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
+});
+
 const uploadVerificationDocsRaw = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const folder = path.join(uploadsDir, 'documents');
-      if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-      cb(null, folder);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    },
-  }),
+  storage: isVercel ? vercelVerificationStorage : localVerificationStorage,
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: documentFileFilter,
 }).fields([

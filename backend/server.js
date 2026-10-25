@@ -63,8 +63,10 @@ if (process.env.NODE_ENV === 'development') {
 // ─── Rate Limiting ────────────────────────────────────────────────────────────
 app.use('/api/', generalLimiter);
 
-// ─── Static Files ─────────────────────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// ─── Static Files (local dev only — Vercel filesystem is read-only) ─────────
+if (!process.env.VERCEL) {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+}
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -88,18 +90,30 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1', predictionRoutes);
 
 // ─── Serve Frontend & 404 Handler ───────────────────────────────────────────
-const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
+if (!process.env.VERCEL) {
+  // On Vercel, static files are served by the CDN (vercel.json outputDirectory).
+  // Locally, serve the built frontend.
+  const frontendPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(frontendPath));
 
-app.get('*', (req, res) => {
-  if (req.originalUrl.startsWith('/api/')) {
-    return res.status(404).json({
+  app.get('*', (req, res) => {
+    if (req.originalUrl.startsWith('/api/')) {
+      return res.status(404).json({
+        success: false,
+        error: `Route not found: ${req.method} ${req.originalUrl}`,
+      });
+    }
+    res.sendFile(path.resolve(frontendPath, 'index.html'));
+  });
+} else {
+  // On Vercel: only handle API 404s (frontend is served by CDN)
+  app.all('*', (req, res) => {
+    res.status(404).json({
       success: false,
       error: `Route not found: ${req.method} ${req.originalUrl}`,
     });
-  }
-  res.sendFile(path.resolve(frontendPath, 'index.html'));
-});
+  });
+}
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
@@ -115,8 +129,10 @@ const startServer = async () => {
     console.warn('⚠️  MongoDB unavailable — DB-dependent routes disabled. Prediction engine still active.');
   }
 
-  // Initialize Socket.io
-  try { initSocket(server); } catch (_) {}
+  // Initialize Socket.io (not supported on Vercel serverless)
+  if (!process.env.VERCEL) {
+    try { initSocket(server); } catch (_) {}
+  }
 
   // Start HTTP server
   server.listen(PORT, () => {

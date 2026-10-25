@@ -1,22 +1,63 @@
 /**
- * Local file storage — replaces Cloudinary for local development.
+ * File storage — uses real Cloudinary on Vercel (or when env vars are set),
+ * falls back to local file storage for development.
  * Exports the same function signatures so controllers need no changes.
- * Files are saved to: backend/uploads/{properties|documents|avatars}/
- * Served at: /uploads/... via express.static in server.js
  */
 const fs = require('fs');
 const path = require('path');
 
 const uploadsRoot = path.join(__dirname, '..', 'uploads');
 
-/**
- * "Upload" a file — for local storage the file is already saved by multer.
- * Returns { url, publicId } matching the Cloudinary response shape.
- * @param {string} filePath  - absolute path where multer saved the file
- * @param {string} folder    - subfolder under uploads/ (ignored, multer decides)
- */
-const uploadToCloudinary = async (filePath, folder = 'realstate') => {
-  // File is already on disk — just build the public URL
+// ─── Check if real Cloudinary is configured ───────────────────────────────────
+const hasCloudinary =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_KEY !== 'your_api_key';
+
+let cloudinary;
+if (hasCloudinary) {
+  cloudinary = require('cloudinary').v2;
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+// ─── Helper: upload buffer to Cloudinary ──────────────────────────────────────
+const uploadBufferToCloudinary = (buffer, options = {}) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+    stream.end(buffer);
+  });
+};
+
+// ─── uploadToCloudinary ───────────────────────────────────────────────────────
+const uploadToCloudinary = async (filePathOrFile, folder = 'realstate') => {
+  // Real Cloudinary
+  if (hasCloudinary) {
+    // If it's a multer memory-stored file (has .buffer)
+    if (typeof filePathOrFile === 'object' && filePathOrFile.buffer) {
+      const result = await uploadBufferToCloudinary(filePathOrFile.buffer, {
+        folder,
+        resource_type: 'auto',
+      });
+      return { url: result.secure_url, publicId: result.public_id };
+    }
+    // If it's a file path string (disk storage)
+    const result = await cloudinary.uploader.upload(filePathOrFile, {
+      folder,
+      resource_type: 'auto',
+    });
+    return { url: result.secure_url, publicId: result.public_id };
+  }
+
+  // Local fallback
+  const filePath = typeof filePathOrFile === 'object' ? filePathOrFile.path : filePathOrFile;
   const filename = path.basename(filePath);
   const subfolder = filePath.includes('properties')
     ? 'properties'
@@ -32,11 +73,14 @@ const uploadToCloudinary = async (filePath, folder = 'realstate') => {
   };
 };
 
-/**
- * Delete a local file by its publicId (filename).
- * Searches all upload subfolders.
- */
+// ─── deleteFromCloudinary ─────────────────────────────────────────────────────
 const deleteFromCloudinary = async (publicId) => {
+  if (hasCloudinary) {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result;
+  }
+
+  // Local fallback
   const subfolders = ['properties', 'documents', 'avatars'];
   for (const sub of subfolders) {
     const filePath = path.join(uploadsRoot, sub, publicId);
@@ -48,12 +92,31 @@ const deleteFromCloudinary = async (publicId) => {
   return { result: 'not found' };
 };
 
-/**
- * "Upload" multiple files — already saved by multer, just map to URLs.
- * @param {Array}  files   - multer file objects (with .path and .filename)
- * @param {string} folder  - ignored for local storage
- */
+// ─── uploadMultipleToCloudinary ───────────────────────────────────────────────
 const uploadMultipleToCloudinary = async (files, folder = 'realstate') => {
+  if (hasCloudinary) {
+    const results = await Promise.all(
+      files.map(async (file) => {
+        // Memory storage (Vercel) — file.buffer exists
+        if (file.buffer) {
+          const result = await uploadBufferToCloudinary(file.buffer, {
+            folder,
+            resource_type: 'auto',
+          });
+          return { url: result.secure_url, publicId: result.public_id };
+        }
+        // Disk storage (local dev) — file.path exists
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder,
+          resource_type: 'auto',
+        });
+        return { url: result.secure_url, publicId: result.public_id };
+      })
+    );
+    return results;
+  }
+
+  // Local fallback
   return files.map((file) => ({
     url: `/uploads/properties/${file.filename}`,
     publicId: file.filename,
